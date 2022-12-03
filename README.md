@@ -9,12 +9,14 @@ We will use simple linear regression to predict the price of a car based on its 
 A Gradient descent will help us to find values of parameters of a function that minimizes a cost function.
 In this case, it will be the mean squared error function.
 
-Mean squared error function
+Mean squared error function (the slammer MSE value is, the better predictions will be)
+
 ![mean_squared_error](https://user-images.githubusercontent.com/94646532/205450141-44e74d34-88f2-4071-9b81-9eb24eafd2ac.png)
 
 Gradient function
+
 ![gradient](https://user-images.githubusercontent.com/94646532/205450152-cc8dad80-13f2-447d-9aab-dd3d2cbf5f7e.png)
 
-Make sure to download python3, combined with libraries csv, matplotlib and numpy
+Make sure to download python3, combined with libraries csv, matplotlib and numpy to be able to compile.
 
 Have fun 😄
