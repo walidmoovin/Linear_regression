@@ -4,7 +4,7 @@ import numpy as np
 # Regression models describe relationship between a dependent variable and independent variable(s).
 # We will use simple linear regression to find the price of a car based on its mileage.
 
-# Theta's represemts how important feature is in hyphotesis (regressionc coefficients or weights)
+# Theta's represents how important feature is in hyphotesis (regressionc coefficients or weights)
 # The more important feature is, the bigger Theta is.
 
 # Formula for simple linear regression :
@@ -13,34 +13,61 @@ import numpy as np
 def parsing_dataset():
 	mileage = []
 	price = []
-	i = 0
-	with open('data.csv', 'r') as csvfile:
-		plots = csv.reader(csvfile, delimiter=',')
-		for row in plots:
-			# if i == 0:
-			# 	i = 1
-			# 	continue
-			mileage.append(float(row[0]))
-			price.append(float(row[1]))
-			i += 1
+	# open csv file and stop program if file is not found
+	try:
+		with open('data.csv') as csvfile:
+			reader = csv.reader(csvfile)
+			for row in reader:
+					mileage.append(float(row[0]))
+					price.append(float(row[1]))
+	except FileNotFoundError:
+		print ("File not found")
+		exit()
 	return (mileage, price)
+# ----------------- INPUT -----------------
+def inputMileage(Theta0, Theta1, givenMileage, givenPrice):
+	print ("Welcome to the car price estimator !")
+	print ("Please enter the mileage of your car: ")
+	mileage = input()
+	# verify if input is a number and stop program if not and if input is negative
+	try:
+		mileage = float(mileage)
+		if (mileage < 0):
+			print ("Mileage must be positive")
+			exit()
+		if (estimatePrice(mileage, Theta0, Theta1) < 0):
+			print("cringe, your car is broken at this point")
+			exit()
+		print("Your car is worth: ", estimatePrice(mileage, Theta0, Theta1))
+		plotData(givenMileage, givenPrice, Theta0, Theta1)
+	except ValueError:
+		print ("Mileage must be a number")
+		exit()
+	return (mileage)
 # ----------------- NORMALIZATION -----------------
 # Normalization = scaling data to be between 0 and 1.
 # how to normalize:
-# x = (x - min(x)) / (max(x) - min(x)) -> (x - min(x)) = how far from min(x) is x | (max(x) - min(x)) = range of x
+# x = (x - min(x)) / (max(x) - min(x)) (x - min(x)) = how far from min(x) is x | (max(x) - min(x)) = range of x
 # https://www.youtube.com/watch?v=UqYde-LULfs
-# use copy of data to not modify original data
 def normalizeData(givenMileage, givenPrice):
-	normalizedMileage = givenMileage.copy()
-	normalizedPrice = givenPrice.copy()
-	minMileage = min(givenMileage)
-	maxMileage = max(givenMileage)
-	minPrice = min(givenPrice)
-	maxPrice = max(givenPrice)
+	min_mileage = min(givenMileage)
+	max_mileage = max(givenMileage)
+	min_price = min(givenPrice)
+	max_price = max(givenPrice)
 	for x in range(len(givenMileage)):
-		normalizedMileage[x] = (givenMileage[x] - minMileage) / (maxMileage - minMileage)
-		normalizedPrice[x] = (givenPrice[x] - minPrice) / (maxPrice - minPrice)
-	return (normalizedMileage, normalizedPrice)
+		givenMileage[x] = (givenMileage[x] - min_mileage) / (max_mileage - min_mileage)
+		givenPrice[x] = (givenPrice[x] - min_price) / (max_price - min_price)
+	return (givenMileage, givenPrice)
+# denormalize data that was normalized
+def denormalizeData(givenMileage, givenPrice, Theta0, Theta1):
+	min_mileage = min(givenMileage)
+	max_mileage = max(givenMileage)
+	min_price = min(givenPrice)
+	max_price = max(givenPrice)
+	Theta0 = (Theta0 * (max_price - min_price)) + min_price
+	Theta1 = Theta1 * (max_price - min_price) / (max_mileage - min_mileage)
+	return (Theta0, Theta1)
+
 # ----------------- EQUATIONS DEFINITION -----------------
 def estimatePrice(givenMileage, Theta0, Theta1): # Using given hyphotesis
 	return (Theta0 + (Theta1 * float(givenMileage)))
@@ -62,8 +89,8 @@ def calculateMeanSquaredError(givenMileage, givenPrice, Theta0, Theta1):
 # Big data = more iterations
 # In the equation, m = number of training examples.
 def gradientDescent(givenMileage, givenPrice):
-	num_iterations = 100000
-	learning_rate = 0.001 # how fast our model will converge
+	num_iterations = 10066
+	learning_rate = 0.1 # how fast our model will converge
 	Theta0 = 0
 	Theta1 = 0
 	for i in range(num_iterations):
@@ -89,18 +116,17 @@ def plotData(givenMileage, givenPrice, Theta0, Theta1):
 	plt.ylabel('Price')
 	plt.show()
 # ----------------- RUNNING -----------------
-def run():
+def main():
 	mileage, price = parsing_dataset()
-	mileage, price = normalizeData(mileage, price)
-	print("MSE at start: ", calculateMeanSquaredError(mileage, price, 0, 0))
-	Theta0, Theta1 = gradientDescent(mileage, price)
+	mileageCopy = mileage.copy()
+	priceCopy = price.copy()
+	print("Mean squared error before training: ", calculateMeanSquaredError(mileage, price, 0, 0))
+	mileageCopy, priceCopy = normalizeData(mileageCopy, priceCopy)
+	Theta0, Theta1 = gradientDescent(mileageCopy, priceCopy)
+	print ("Mean squared error: ", calculateMeanSquaredError(mileageCopy, priceCopy, Theta0, Theta1))
+	Theta0, Theta1 = denormalizeData(mileage, price, Theta0, Theta1)
 	print("Theta0: ", Theta0, "Theta1: ", Theta1)
-	print("MSE: ", calculateMeanSquaredError(mileage, price, Theta0, Theta1))
-	print("Price for 60000 mileage: ", estimatePrice(60000, Theta0, Theta1))
-	print("Price for 70000 mileage: ", estimatePrice(70000, Theta0, Theta1))
-	print("Price for 80000 mileage: ", estimatePrice(80000, Theta0, Theta1))
-	print("Price for 90000 mileage: ", estimatePrice(90000, Theta0, Theta1))
-	print("Price for 100000 mileage: ", estimatePrice(100000, Theta0, Theta1))
-	print("Price for 200000 mileage: ", estimatePrice(200000, Theta0, Theta1))
-	plotData(mileage, price, Theta0, Theta1)
-run()
+	inputMileage(Theta0, Theta1, mileage, price)
+
+if __name__ == "__main__":
+	main()
